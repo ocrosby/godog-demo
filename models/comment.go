@@ -1,5 +1,6 @@
 package models
 
+// Comment struct
 type Comment struct {
 	PostID int    `json:"postId"`
 	ID     int    `json:"id"`

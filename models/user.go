@@ -1,10 +1,12 @@
 package models
 
+// Geo Geocode struct
 type Geo struct {
 	Lat string `json:"lat"`
 	Lng string `json:"lng"`
 }
 
+// Address struct
 type Address struct {
 	Street  string `json:"street"`
 	Suite   string `json:"suite"`
@@ -13,12 +15,14 @@ type Address struct {
 	Geo     Geo    `json:"geo"`
 }
 
+// Company struct
 type Company struct {
 	Name        string `json:"name"`
 	CatchPhrase string `json:"catchPhrase"`
 	Bs          string `json:"bs"`
 }
 
+// User struct
 type User struct {
 	ID       int     `json:"id"`
 	Name     string  `json:"name"`

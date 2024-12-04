@@ -1,5 +1,6 @@
 package models
 
+// Post struct
 type Post struct {
 	UserID int    `json:"userId"`
 	ID     int    `json:"id"`
