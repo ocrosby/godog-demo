@@ -6,4 +6,6 @@ Feature: Albums
   @albums
   Scenario: Get all albums
     When I send a "GET" request to "/albums"
-    Then the response status code should be 200
+    Then the response should be successful
+    And there should be 100 albums in the response body
+    

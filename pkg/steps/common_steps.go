@@ -9,12 +9,6 @@ import (
 
 var lastResponse *http.Response
 
-// InitializeCommonSteps defines the common steps for the test suite
-func InitializeCommonSteps(ctx *godog.ScenarioContext) {
-	ctx.Step(`^the response status code should be (\d+)$`, responseStatusCodeShouldBe)
-	ctx.Step(`^I send a "([^"]*)" request to "([^"]*)"$`, iSendRequestTo)
-}
-
 // iSendRequestTo sends a request to the specified resource
 func iSendRequestTo(method, resource string) error {
 	var err error
@@ -26,6 +20,15 @@ func iSendRequestTo(method, resource string) error {
 	return err
 }
 
+// responseShouldBeSuccessful checks if the response is successful
+func responseShouldBeSuccessful() error {
+	if lastResponse.StatusCode < 200 || lastResponse.StatusCode >= 300 {
+		return fmt.Errorf("expected status code to be successful, but got %d", lastResponse.StatusCode)
+	}
+
+	return nil
+}
+
 // responseStatusCodeShouldBe checks if the response status code is as expected
 func responseStatusCodeShouldBe(expectedStatusCode int) error {
 	if lastResponse.StatusCode != expectedStatusCode {
@@ -33,4 +36,11 @@ func responseStatusCodeShouldBe(expectedStatusCode int) error {
 	}
 
 	return nil
+}
+
+// InitializeCommonSteps defines the common steps for the test suite
+func InitializeCommonSteps(ctx *godog.ScenarioContext) {
+	ctx.Step(`^the response should be successful$`, responseShouldBeSuccessful)
+	ctx.Step(`^the response status code should be (\d+)$`, responseStatusCodeShouldBe)
+	ctx.Step(`^I send a "([^"]*)" request to "([^"]*)"$`, iSendRequestTo)
 }

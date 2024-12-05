@@ -26,7 +26,7 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	steps.InitializeAlbumSteps(ctx)
 }
 
-func TestFeatures(t *testing.T) {
+func TestAlbumFeatures(t *testing.T) {
 	suite := godog.TestSuite{
 		ScenarioInitializer: InitializeScenario,
 		Options: &godog.Options{
