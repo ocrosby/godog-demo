@@ -9,7 +9,7 @@ import (
 	"io"
 )
 
-func AndThereShouldBeAlbumsInTheResponseBody(expectedAlbumCount int) error {
+func thereShouldBeAlbumsInTheResponseBody(expectedAlbumCount int) error {
 	body, err := io.ReadAll(lastResponse.Body)
 	if err != nil {
 		return fmt.Errorf("failed to read response body: %w", err)
@@ -52,5 +52,5 @@ func InitializeAlbumScenario(ctx *godog.ScenarioContext) {
 }
 
 func InitializeAlbumSteps(ctx *godog.ScenarioContext) {
-	ctx.Step(`^there should be (\d+) albums in the response body$`, AndThereShouldBeAlbumsInTheResponseBody)
+	ctx.Step(`^there should be (\d+) albums in the response body$`, thereShouldBeAlbumsInTheResponseBody)
 }
