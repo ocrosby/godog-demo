@@ -1,7 +1,10 @@
-.PHONY: lint test deps install docker-build docker-test
+.PHONY: clean lint test deps install docker-build docker-test
 
 test:
 	go test ./... -v
+
+clean:
+	rm -f godog-demo
 
 deps:
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
