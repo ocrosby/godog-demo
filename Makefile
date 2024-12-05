@@ -1,4 +1,4 @@
-.PHONY: lint test deps install
+.PHONY: lint test deps install docker-build docker-test
 
 test:
 	go test ./... -v
@@ -12,3 +12,10 @@ lint:
 install: deps
 	go mod tidy
 	go mod download
+
+docker-build:
+	docker build -t godog-demo .
+
+docker-test: docker-build
+	docker run --rm godog-demo
+	
