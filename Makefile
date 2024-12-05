@@ -1,13 +1,15 @@
 .PHONY: clean lint test deps install docker-build docker-test
 
 test:
-	go test ./... -v
+	#go test ./... -v
+	gotestsum --format testname --junitfile junit.xml -- -v
 
 clean:
 	rm -f godog-demo
 
 deps:
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+	go install gotest.tools/gotestsum@latest
 
 lint:
 	golangci-lint run
