@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"github.com/cucumber/godog"
-	"github.com/ocrosby/godog-demo/tests/steps"
+	"github.com/ocrosby/godog-demo/pkg/steps"
 )
 
 func InitializePostScenario(ctx *godog.ScenarioContext) {
@@ -13,5 +13,5 @@ func InitializePostScenario(ctx *godog.ScenarioContext) {
 	})
 
 	// Register post steps
-	steps.PostSteps(ctx)
+	steps.InitializePostSteps(ctx)
 }

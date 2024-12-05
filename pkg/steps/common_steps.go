@@ -3,14 +3,14 @@ package steps
 import (
 	"fmt"
 	"github.com/cucumber/godog"
-	"github.com/ocrosby/godog-demo/helpers"
+	"github.com/ocrosby/godog-demo/pkg/helpers"
 	"net/http"
 )
 
 var lastResponse *http.Response
 
-// CommonSteps defines the common steps for the test suite
-func CommonSteps(ctx *godog.ScenarioContext) {
+// InitializeCommonSteps defines the common steps for the test suite
+func InitializeCommonSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^the response status code should be (\d+)$`, responseStatusCodeShouldBe)
 	ctx.Step(`^I send a "([^"]*)" request to "([^"]*)"$`, iSendRequestTo)
 }
@@ -19,7 +19,9 @@ func CommonSteps(ctx *godog.ScenarioContext) {
 func iSendRequestTo(method, resource string) error {
 	var err error
 
-	lastResponse, err = helpers.SendRequest(method, resource, nil)
+	url := "https://jsonplaceholder.typicode.com" + resource
+
+	lastResponse, err = helpers.SendRequest(method, url, nil)
 
 	return err
 }

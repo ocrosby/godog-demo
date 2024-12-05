@@ -3,7 +3,9 @@ package main
 import (
 	"context"
 	"github.com/cucumber/godog"
-	"github.com/ocrosby/godog-demo/models"
+	"github.com/ocrosby/godog-demo/pkg/models"
+	"github.com/ocrosby/godog-demo/pkg/steps"
+	"testing"
 )
 
 type albumFeature struct {
@@ -20,9 +22,20 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 		return ctx, nil
 	})
 
-	//ctx.Step(`^calculator is cleared$`, calcFeature.calculatorIsCleared)
-	//ctx.Step(`^I add (\d+)$`, calcFeature.iAdd)
-	//ctx.Step(`^I press (\d+)$`, calcFeature.iPress)
-	//ctx.Step(`^I subtract (\d+)$`, calcFeature.iSubtract)
-	//ctx.Step(`^the result should be (\d+)$`, calcFeature.theResultShouldBe)
+	steps.InitializeCommonSteps(ctx)
+	steps.InitializeAlbumSteps(ctx)
+}
+
+func TestFeatures(t *testing.T) {
+	suite := godog.TestSuite{
+		ScenarioInitializer: InitializeScenario,
+		Options: &godog.Options{
+			Format: "pretty",
+			Paths:  []string{"../features"},
+		},
+	}
+
+	if suite.Run() != 0 {
+		t.Fatal("non-zero status returned, failed to run feature tests")
+	}
 }
