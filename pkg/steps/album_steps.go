@@ -1,6 +1,7 @@
 package steps
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/cucumber/godog"
@@ -30,6 +31,24 @@ func AndThereShouldBeAlbumsInTheResponseBody(expectedAlbumCount int) error {
 	}
 
 	return nil
+}
+
+type albumFeature struct {
+	albums []*models.Album
+}
+
+func InitializeAlbumScenario(ctx *godog.ScenarioContext) {
+	albumFeature := &albumFeature{
+		albums: []*models.Album{},
+	}
+
+	ctx.Before(func(ctx context.Context, sc *godog.Scenario) (context.Context, error) {
+		albumFeature.albums = []*models.Album{}
+		return ctx, nil
+	})
+
+	InitializeCommonSteps(ctx)
+	InitializeAlbumSteps(ctx)
 }
 
 func InitializeAlbumSteps(ctx *godog.ScenarioContext) {

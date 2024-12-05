@@ -20,8 +20,8 @@ func iSendRequestTo(method, resource string) error {
 	return err
 }
 
-// responseShouldBeSuccessful checks if the response is successful
-func responseShouldBeSuccessful() error {
+// ResponseShouldBeSuccessful checks if the response is successful
+func ResponseShouldBeSuccessful() error {
 	if lastResponse.StatusCode < 200 || lastResponse.StatusCode >= 300 {
 		return fmt.Errorf("expected status code to be successful, but got %d", lastResponse.StatusCode)
 	}
@@ -40,7 +40,7 @@ func responseStatusCodeShouldBe(expectedStatusCode int) error {
 
 // InitializeCommonSteps defines the common steps for the test suite
 func InitializeCommonSteps(ctx *godog.ScenarioContext) {
-	ctx.Step(`^the response should be successful$`, responseShouldBeSuccessful)
+	ctx.Step(`^the response should be successful$`, ResponseShouldBeSuccessful)
 	ctx.Step(`^the response status code should be (\d+)$`, responseStatusCodeShouldBe)
 	ctx.Step(`^I send a "([^"]*)" request to "([^"]*)"$`, iSendRequestTo)
 }

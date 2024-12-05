@@ -24,13 +24,12 @@ func (c *CommentFeature) thereShouldBeCommentsInTheResponseBody(expectedCommentC
 		}
 	}(lastResponse.Body)
 
-	var comments []models.Comment
-	if err := json.Unmarshal(body, &comments); err != nil {
+	if err := json.Unmarshal(body, &c.comments); err != nil {
 		return fmt.Errorf("failed to unmarshal response body: %w", err)
 	}
 
-	if len(comments) != expectedCommentCount {
-		return fmt.Errorf("expected %d comments, but got %d", expectedCommentCount, len(comments))
+	if len(c.comments) != expectedCommentCount {
+		return fmt.Errorf("expected %d comments, but got %d", expectedCommentCount, len(c.comments))
 	}
 
 	return nil
@@ -53,16 +52,17 @@ func InitializeCommentTestSuite(ctx *godog.TestSuiteContext) {
 }
 
 func InitializeCommentScenario(ctx *godog.ScenarioContext) {
-	commentFeature := &CommentFeature{
-		comments: []*models.Comment{},
-	}
+	//commentFeature := &CommentFeature{
+	//	comments: []*models.Comment{},
+	//}
 
-	ctx.BeforeScenario(func(*godog.Scenario) {
-		commentFeature.comments = []*models.Comment{}
-	})
-
-	ctx.AfterScenario(func(*godog.Scenario, error) {
-	})
+	//ctx.Before(func(*godog.Scenario) {
+	//	commentFeature.comments = []*models.Comment{}
+	//})
+	//
+	//ctx.After(func(*godog.Scenario, error) {
+	//	commentFeature.comments = nil
+	//})
 
 	InitializeCommonSteps(ctx)
 	InitializeCommentSteps(ctx)

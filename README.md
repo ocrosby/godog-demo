@@ -88,3 +88,4 @@ func FeatureContext(s *godog.Suite) {
 
 - [GoDog - Repo](https://github.com/cucumber/godog/)
 - [Examples](https://github.com/cucumber/godog/tree/main/_examples)
+- [GOLANG & API Testing with GoDog](https://medium.com/propertyfinder-engineering/golang-api-testing-with-godog-2de8944d2511)
