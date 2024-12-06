@@ -6,6 +6,10 @@ import (
 	"net/http"
 )
 
+func ResolveUrl(resource string) string {
+	return "https://jsonplaceholder.typicode.com" + resource
+}
+
 func SendRequest(method, url string, body []byte) (*http.Response, error) {
 	req, err := http.NewRequest(method, url, bytes.NewBuffer(body))
 	if err != nil {
