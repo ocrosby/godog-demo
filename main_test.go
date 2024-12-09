@@ -28,16 +28,12 @@ func runFeatureTests(t *testing.T, featurePath string, scenarioInitializer func(
 	}
 }
 
-func main() {
-	TestFeatures(&testing.T{})
-}
-
 func TestFeatures(t *testing.T) {
 	featureTests := map[string]struct {
 		scenarioInitializer  func(*godog.ScenarioContext)
 		testSuiteInitializer func(*godog.TestSuiteContext)
 	}{
-		"features/albums.feature":   {steps.InitializeAlbumScenario, nil},
+		"features/albums.feature":   {steps.InitializeAlbumScenario, steps.InitializeAlbumTestSuite},
 		"features/comments.feature": {steps.InitializeCommentScenario, steps.InitializeCommentTestSuite},
 		"features/photos.feature":   {steps.InitializePhotoScenario, steps.InitializePhotoTestSuite},
 		"features/posts.feature":    {steps.InitializePostScenario, steps.InitializePostTestSuite},
@@ -50,4 +46,8 @@ func TestFeatures(t *testing.T) {
 			runFeatureTests(t, featurePath, initializers.scenarioInitializer, initializers.testSuiteInitializer)
 		})
 	}
+}
+
+func main() {
+	TestFeatures(&testing.T{})
 }

@@ -187,6 +187,14 @@ func (f *albumFeature) thereShouldBeAlbumsInTheResponseBody(expectedAlbumCount i
 	return nil
 }
 
+func InitializeAlbumTestSuite(ctx *godog.TestSuiteContext) {
+	ctx.BeforeSuite(func() {
+	})
+
+	ctx.AfterSuite(func() {
+	})
+}
+
 func InitializeAlbumScenario(ctx *godog.ScenarioContext) {
 	feature := newAlbumFeature()
 
