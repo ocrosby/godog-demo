@@ -2,6 +2,8 @@ package helpers
 
 import (
 	"bytes"
+	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 )
@@ -32,4 +34,27 @@ func ReadResponseBody(resp *http.Response) (string, error) {
 	}
 
 	return string(body), nil
+}
+
+func HandlePostResponse(response *http.Response, target interface{}) (int, error) {
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		return 0, fmt.Errorf("failed to read response body: %w", err)
+	}
+	defer response.Body.Close()
+
+	if err := json.Unmarshal(body, target); err != nil {
+		return 0, fmt.Errorf("failed to unmarshal response body: %w", err)
+	}
+
+	var responseBody map[string]interface{}
+	if err := json.Unmarshal(body, &responseBody); err != nil {
+		return 0, fmt.Errorf("failed to unmarshal response body to map: %w", err)
+	}
+
+	if id, ok := responseBody["id"].(float64); ok {
+		return int(id), nil
+	}
+
+	return 0, fmt.Errorf("response does not contain an id property")
 }

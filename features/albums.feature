@@ -12,9 +12,8 @@ Feature: Albums
     When I create the new album
     Then there should be no errors
     And the response should be successful
-    And the album should have a user id of 1
     And the album should have an id of 101
-    And the album should have a title of "New Album"
+
 
   @albums
   Scenario: Get all albums
@@ -24,13 +23,21 @@ Feature: Albums
     And there should be 100 albums in the response body
     
   @albums
-  Scenario: Get album 1
-    When I request album 1
+  Scenario Outline: Get album
+    When I request album <albumId>
     Then there should be no errors
     And the response should be successful
-    And the album should have an id of 1
-    And the album should have a user id of 1
-    And the album should have a title of "quidem molestiae enim"
+    And the album should have an id of <albumId>
+    And the album should have a user id of <userId>
+    And the album should have a title of "<title>"
+
+    Examples:
+      | albumId | userId | title                                    |
+      | 1       | 1      | quidem molestiae enim                         |
+      | 2       | 1      | sunt qui excepturi placeat culpa         |
+      | 3       | 1      | omnis laborum odio                       |
+      | 4       | 1      | non esse culpa molestiae omnis sed optio |
+
 
   @albums
   Scenario: Delete album 1

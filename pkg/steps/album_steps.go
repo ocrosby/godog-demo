@@ -92,22 +92,13 @@ func (f *albumFeature) iCreateANewAlbum() error {
 		return f.lastError
 	}
 
-	var responseBodyStr string
-	var responseBody map[string]interface{}
-
-	responseBodyStr, f.lastError = helpers.ReadResponseBody(f.response)
-	if f.lastError != nil {
-		return f.lastError
+	id, err := helpers.HandlePostResponse(f.response, &f.newAlbum)
+	if err != nil {
+		return fmt.Errorf("failed to handle post response: %w", err)
 	}
 
-	if err := json.Unmarshal([]byte(responseBodyStr), &responseBody); err != nil {
-		return fmt.Errorf("failed to unmarshal response body: %w", err)
-	}
-
-	if id, ok := responseBody["id"].(float64); ok {
-		fmt.Println("Response ID:", int(id))
-	} else {
-		return fmt.Errorf("response does not contain an id property")
+	f.album = &models.Album{
+		ID: id,
 	}
 
 	return nil

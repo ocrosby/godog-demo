@@ -26,6 +26,16 @@ cd godog-demo
 make install
 ```
 
+## Useful JetBrains IDE Plugins
+
+- [Cucumber +](https://plugins.jetbrains.com/plugin/16289-cucumber-)
+- [Cucumber Go](https://plugins.jetbrains.com/plugin/24323-cucumber-go)
+- [Gherkin](https://plugins.jetbrains.com/plugin/9164-gherkin)
+- [Gherkin Overview](https://plugins.jetbrains.com/plugin/16716-gherkin-overview)
+
+
+
+
 ## Usage
 
 ### Writing Features
