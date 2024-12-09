@@ -8,3 +8,8 @@ Feature: Comments
         When I send a "GET" request to "/comments"
         Then the response should be successful
         And there should be 500 comments in the response body
+
+    Scenario: Delete a comments
+        When I delete a comment with id 1
+        Then there should be no errors
+        And the response should be successful
