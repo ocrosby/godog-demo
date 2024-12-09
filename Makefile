@@ -6,6 +6,7 @@ test:
 
 clean:
 	rm -f godog-demo
+	rm -f junit.xml
 
 deps:
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
