@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites tests="7" failures="0" errors="0" time="1.486044">
+	<testsuite tests="7" failures="0" time="1.045000" name="github.com/ocrosby/godog-demo" timestamp="2024-12-05T14:11:59-05:00">
+		<properties>
+			<property name="go.version" value="go1.23.1 darwin/arm64"></property>
+		</properties>
+		<testcase classname="github.com/ocrosby/godog-demo" name="TestFeatures/features/albums.feature" time="0.230000"></testcase>
+		<testcase classname="github.com/ocrosby/godog-demo" name="TestFeatures/features/comments.feature" time="0.070000"></testcase>
+		<testcase classname="github.com/ocrosby/godog-demo" name="TestFeatures/features/photos.feature" time="0.120000"></testcase>
+		<testcase classname="github.com/ocrosby/godog-demo" name="TestFeatures/features/posts.feature" time="0.050000"></testcase>
+		<testcase classname="github.com/ocrosby/godog-demo" name="TestFeatures/features/todos.feature" time="0.030000"></testcase>
+		<testcase classname="github.com/ocrosby/godog-demo" name="TestFeatures/features/users.feature" time="0.040000"></testcase>
+		<testcase classname="github.com/ocrosby/godog-demo" name="TestFeatures" time="0.540000"></testcase>
+	</testsuite>
+</testsuites>
