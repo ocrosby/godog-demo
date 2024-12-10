@@ -1,6 +1,7 @@
 package steps
 
 import (
+	"context"
 	"fmt"
 	"github.com/cucumber/godog"
 	"github.com/ocrosby/godog-demo/pkg/helpers"
@@ -8,6 +9,20 @@ import (
 )
 
 var lastResponse *http.Response
+
+const errorKey contextKey = "error"
+
+func withError(ctx context.Context, err error) context.Context {
+	return context.WithValue(ctx, errorKey, err)
+}
+
+func getError(ctx context.Context) error {
+	if err, ok := ctx.Value(errorKey).(error); ok {
+		return err
+	}
+	
+	return nil
+}
 
 // iSendRequestTo sends a request to the specified resource
 func iSendRequestTo(method, resource string) error {
@@ -33,6 +48,15 @@ func ResponseShouldBeSuccessful() error {
 func responseStatusCodeShouldBe(expectedStatusCode int) error {
 	if lastResponse.StatusCode != expectedStatusCode {
 		return fmt.Errorf("expected status code %d, but got %d", expectedStatusCode, lastResponse.StatusCode)
+	}
+
+	return nil
+}
+
+func thereShouldBeNoErrors(ctx context.Context) error {
+	err := ctx.Value("error")
+	if err != nil {
+		return fmt.Errorf("expected no errors, but got %v", err)
 	}
 
 	return nil

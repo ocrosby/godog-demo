@@ -1,9 +1,8 @@
-package godog_demo
+package steps
 
 import (
 	"github.com/cucumber/godog"
 	"github.com/cucumber/godog/colors"
-	"github.com/ocrosby/godog-demo/pkg/steps"
 	"os"
 	"testing"
 	"time"
@@ -33,12 +32,13 @@ func TestFeatures(t *testing.T) {
 		scenarioInitializer  func(*godog.ScenarioContext)
 		testSuiteInitializer func(*godog.TestSuiteContext)
 	}{
-		"features/albums.feature":   {steps.InitializeAlbumScenario, steps.InitializeAlbumTestSuite},
-		"features/comments.feature": {steps.InitializeCommentScenario, steps.InitializeCommentTestSuite},
-		"features/photos.feature":   {steps.InitializePhotoScenario, steps.InitializePhotoTestSuite},
-		"features/posts.feature":    {steps.InitializePostScenario, steps.InitializePostTestSuite},
-		"features/todos.feature":    {steps.InitializeTodoScenario, steps.InitializeTodoTestSuite},
-		"features/users.feature":    {steps.InitializeUserScenario, steps.InitializeUserTestSuite},
+		"../albums.feature":     {InitializeAlbumScenario, InitializeAlbumTestSuite},
+		"../comments.feature":   {InitializeCommentScenario, InitializeCommentTestSuite},
+		"../photos.feature":     {InitializePhotoScenario, InitializePhotoTestSuite},
+		"../posts.feature":      {InitializePostScenario, InitializePostTestSuite},
+		"../todos.feature":      {InitializeTodoScenario, InitializeTodoTestSuite},
+		"../users.feature":      {InitializeUserScenario, InitializeUserTestSuite},
+		"../calculator.feature": {InitializeCalculatorScenario, InitializeCalculatorTestSuite},
 	}
 
 	for featurePath, initializers := range featureTests {

@@ -5,6 +5,7 @@ A demo repository demonstrating the use of GoDog for behavioral testing.
 ## Table of Contents
 
 - [Introduction](#introduction)
+- [Prerequisites](#prerequisites)
 - [Installation](#installation)
 - [Usage](#usage)
 - [Running Tests](#running-tests)
@@ -15,6 +16,28 @@ A demo repository demonstrating the use of GoDog for behavioral testing.
 
 This repository provides a simple example of how to use GoDog for acceptance testing in a Go project. GoDog is a 
 behavior-driven development (BDD) framework for Go.
+
+## Prerequisites
+
+Before you begin, ensure you have the following installed:
+
+- **Go**: The Go programming language. You can download it from [golang.org](https://golang.org/dl/).
+- **GoDog**: The GoDog BDD framework. Install it using the following command:
+  ```sh
+  go get github.com/cucumber/godog/cmd/godog
+  ```
+
+Git: Version control system to clone the repository. You can download it from git-scm.com.
+
+Make: A build automation tool. It is usually pre-installed on Unix-based systems. For Windows, you can use Make for Windows.
+
+## Running Individual Scenarios
+
+Instructions on how to run specific scenarios or feature files.
+
+## Debugging Tests
+
+Tips and tools for debugging failing tests.
 
 ## Installation
 
@@ -32,9 +55,6 @@ make install
 - [Cucumber Go](https://plugins.jetbrains.com/plugin/24323-cucumber-go)
 - [Gherkin](https://plugins.jetbrains.com/plugin/9164-gherkin)
 - [Gherkin Overview](https://plugins.jetbrains.com/plugin/16716-gherkin-overview)
-
-
-
 
 ## Usage
 

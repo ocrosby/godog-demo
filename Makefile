@@ -2,7 +2,7 @@
 
 test:
 	#go test ./... -v
-	gotestsum --format testname --junitfile junit.xml -- -v
+	gotestsum --format testname --junitfile junit.xml -- -v -count=1 ./features/steps
 
 clean:
 	rm -f godog-demo

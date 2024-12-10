@@ -17,14 +17,6 @@ func iDeleteAPostWithId(postId int) error {
 	return lastError
 }
 
-func thereShouldBeNoErrors() error {
-	if lastError != nil {
-		return lastError
-	}
-
-	return nil
-}
-
 func InitializePostScenario(ctx *godog.ScenarioContext) {
 	ctx.Before(func(ctx context.Context, sc *godog.Scenario) (context.Context, error) {
 		// Initialize any necessary state here
