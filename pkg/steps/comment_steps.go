@@ -6,13 +6,27 @@ import (
 	"github.com/cucumber/godog"
 	"github.com/ocrosby/godog-demo/pkg/models"
 	"io"
+	"net/http"
 )
 
-type CommentFeature struct {
-	comments []*models.Comment
+type commentFeature struct {
+	response   *http.Response
+	body       []byte
+	url        string
+	resource   string
+	lastError  error
+	newComment *models.Comment
+	comment    *models.Comment
+	comments   []*models.Comment
 }
 
-func (c *CommentFeature) thereShouldBeCommentsInTheResponseBody(expectedCommentCount int) error {
+func newCommentFeature() *commentFeature {
+	return &commentFeature{
+		comments: nil,
+	}
+}
+
+func (c *commentFeature) thereShouldBeCommentsInTheResponseBody(expectedCommentCount int) error {
 	body, err := io.ReadAll(lastResponse.Body)
 	if err != nil {
 		return fmt.Errorf("failed to read response body: %w", err)
@@ -35,14 +49,6 @@ func (c *CommentFeature) thereShouldBeCommentsInTheResponseBody(expectedCommentC
 	return nil
 }
 
-func InitializeCommentSteps(ctx *godog.ScenarioContext) {
-	commentFeature := &CommentFeature{
-		comments: []*models.Comment{},
-	}
-
-	ctx.Step(`^there should be (\d+) comments in the response body$`, commentFeature.thereShouldBeCommentsInTheResponseBody)
-}
-
 func InitializeCommentTestSuite(ctx *godog.TestSuiteContext) {
 	ctx.BeforeSuite(func() {
 	})
@@ -52,18 +58,9 @@ func InitializeCommentTestSuite(ctx *godog.TestSuiteContext) {
 }
 
 func InitializeCommentScenario(ctx *godog.ScenarioContext) {
-	//commentFeature := &CommentFeature{
-	//	comments: []*models.Comment{},
-	//}
+	feature := &commentFeature{
+		comments: []*models.Comment{},
+	}
 
-	//ctx.Before(func(*godog.Scenario) {
-	//	commentFeature.comments = []*models.Comment{}
-	//})
-	//
-	//ctx.After(func(*godog.Scenario, error) {
-	//	commentFeature.comments = nil
-	//})
-
-	InitializeCommonSteps(ctx)
-	InitializeCommentSteps(ctx)
+	ctx.Step(`^there should be (\d+) comments in the response body$`, feature.thereShouldBeCommentsInTheResponseBody)
 }
