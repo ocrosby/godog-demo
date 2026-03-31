@@ -1,6 +1,6 @@
 module github.com/ocrosby/godog-demo
 
-go 1.23
+go 1.25.3
 
 require github.com/cucumber/godog v0.15.0
 

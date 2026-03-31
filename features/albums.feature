@@ -33,7 +33,7 @@ Feature: Albums
 
     Examples:
       | albumId | userId | title                                    |
-      | 1       | 1      | quidem molestiae enim                         |
+      | 1       | 1      | quidem molestiae enim                    |
       | 2       | 1      | sunt qui excepturi placeat culpa         |
       | 3       | 1      | omnis laborum odio                       |
       | 4       | 1      | non esse culpa molestiae omnis sed optio |
