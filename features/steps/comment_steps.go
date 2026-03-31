@@ -12,21 +12,31 @@ import (
 	"github.com/ocrosby/godog-demo/pkg/models"
 )
 
+// commentKey is the context key used to store and retrieve the current Comment
+// being built or inspected within a scenario.
 const commentKey contextKey = "comment"
 
+// withComment stores comment in ctx under commentKey and returns the updated context.
 func withComment(ctx context.Context, comment *models.Comment) context.Context {
 	return context.WithValue(ctx, commentKey, comment)
 }
 
+// getComment retrieves the Comment stored by withComment from ctx.
+// It returns (nil, false) if no comment has been stored or the stored value is
+// not a *models.Comment.
 func getComment(ctx context.Context) (*models.Comment, bool) {
 	c, ok := ctx.Value(commentKey).(*models.Comment)
 	return c, ok
 }
 
+// aNewComment initialises a blank Comment in the scenario context, ready for
+// subsequent "the new comment has a …" steps to populate.
 func aNewComment(ctx context.Context) (context.Context, error) {
 	return withComment(ctx, &models.Comment{}), nil
 }
 
+// theNewCommentHasAPostIdOf sets the PostID on the comment being built in ctx.
+// It returns an error when no comment has been initialised in the context.
 func theNewCommentHasAPostIdOf(ctx context.Context, postId int) (context.Context, error) {
 	comment, ok := getComment(ctx)
 	if !ok {
@@ -36,6 +46,8 @@ func theNewCommentHasAPostIdOf(ctx context.Context, postId int) (context.Context
 	return withComment(ctx, comment), nil
 }
 
+// theNewCommentHasAnIdOf sets the ID on the comment being built in ctx.
+// It returns an error when no comment has been initialised in the context.
 func theNewCommentHasAnIdOf(ctx context.Context, id int) (context.Context, error) {
 	comment, ok := getComment(ctx)
 	if !ok {
@@ -45,6 +57,8 @@ func theNewCommentHasAnIdOf(ctx context.Context, id int) (context.Context, error
 	return withComment(ctx, comment), nil
 }
 
+// theNewCommentHasANameOf sets the Name on the comment being built in ctx.
+// It returns an error when no comment has been initialised in the context.
 func theNewCommentHasANameOf(ctx context.Context, value string) (context.Context, error) {
 	comment, ok := getComment(ctx)
 	if !ok {
@@ -54,6 +68,8 @@ func theNewCommentHasANameOf(ctx context.Context, value string) (context.Context
 	return withComment(ctx, comment), nil
 }
 
+// theNewCommentHasAnEmailOf sets the Email on the comment being built in ctx.
+// It returns an error when no comment has been initialised in the context.
 func theNewCommentHasAnEmailOf(ctx context.Context, value string) (context.Context, error) {
 	comment, ok := getComment(ctx)
 	if !ok {
@@ -63,6 +79,8 @@ func theNewCommentHasAnEmailOf(ctx context.Context, value string) (context.Conte
 	return withComment(ctx, comment), nil
 }
 
+// theNewCommentHasABodyOf sets the Body on the comment being built in ctx.
+// It returns an error when no comment has been initialised in the context.
 func theNewCommentHasABodyOf(ctx context.Context, value string) (context.Context, error) {
 	comment, ok := getComment(ctx)
 	if !ok {
@@ -72,8 +90,12 @@ func theNewCommentHasABodyOf(ctx context.Context, value string) (context.Context
 	return withComment(ctx, comment), nil
 }
 
-// postComment marshals comment, POSTs it to /comments, and returns the server-assigned ID.
-// Extracted to keep iCreateTheNewComment below its complexity budget.
+// postComment marshals comment to JSON, POSTs it to POST /comments, checks that
+// the API returned HTTP 201 Created, and returns the server-assigned ID extracted
+// from the response body.
+//
+// It is extracted from iCreateTheNewComment to keep that function within its
+// complexity budget. It returns (0, err) on any failure.
 func postComment(comment *models.Comment) (int, error) {
 	payload, err := json.Marshal(comment)
 	if err != nil {
@@ -93,6 +115,10 @@ func postComment(comment *models.Comment) (int, error) {
 	return helpers.HandlePostResponse(resp, comment)
 }
 
+// iCreateTheNewComment POSTs the comment built by prior steps, sets the
+// server-assigned ID on the comment, and stores the updated comment back in ctx.
+// Any error is both returned and stored in ctx so that assertion steps can
+// detect it with "the result should be an error".
 func iCreateTheNewComment(ctx context.Context) (context.Context, error) {
 	comment, ok := getComment(ctx)
 	if !ok {
@@ -108,6 +134,8 @@ func iCreateTheNewComment(ctx context.Context) (context.Context, error) {
 	return withComment(ctx, comment), nil
 }
 
+// theCommentShouldHaveAnIdOf returns an error when the comment stored in ctx
+// does not have the expected ID.
 func theCommentShouldHaveAnIdOf(ctx context.Context, expected int) (context.Context, error) {
 	comment, ok := getComment(ctx)
 	if !ok {
@@ -119,6 +147,9 @@ func theCommentShouldHaveAnIdOf(ctx context.Context, expected int) (context.Cont
 	return ctx, nil
 }
 
+// iRequestComment fetches the comment identified by commentId from
+// GET /comments/{id} and stores it in ctx for subsequent assertion steps.
+// It returns a wrapped error on any transport, read, or unmarshal failure.
 func iRequestComment(ctx context.Context, commentId int) (context.Context, error) {
 	url := helpers.ResolveUrl(fmt.Sprintf("/comments/%d", commentId))
 
@@ -141,6 +172,8 @@ func iRequestComment(ctx context.Context, commentId int) (context.Context, error
 	return withComment(ctx, &comment), nil
 }
 
+// theCommentShouldHaveAPostIdOf returns an error when the comment in ctx does
+// not have the expected PostID.
 func theCommentShouldHaveAPostIdOf(ctx context.Context, expected int) (context.Context, error) {
 	comment, ok := getComment(ctx)
 	if !ok {
@@ -152,6 +185,8 @@ func theCommentShouldHaveAPostIdOf(ctx context.Context, expected int) (context.C
 	return ctx, nil
 }
 
+// theCommentShouldHaveANameOf returns an error when the comment in ctx does not
+// have the expected Name.
 func theCommentShouldHaveANameOf(ctx context.Context, expected string) (context.Context, error) {
 	comment, ok := getComment(ctx)
 	if !ok {
@@ -163,6 +198,8 @@ func theCommentShouldHaveANameOf(ctx context.Context, expected string) (context.
 	return ctx, nil
 }
 
+// theCommentShouldHaveAnEmailOf returns an error when the comment in ctx does
+// not have the expected Email.
 func theCommentShouldHaveAnEmailOf(ctx context.Context, expected string) (context.Context, error) {
 	comment, ok := getComment(ctx)
 	if !ok {
@@ -174,6 +211,8 @@ func theCommentShouldHaveAnEmailOf(ctx context.Context, expected string) (contex
 	return ctx, nil
 }
 
+// theCommentShouldHaveABodyOf returns an error when the comment in ctx does not
+// have the expected Body.
 func theCommentShouldHaveABodyOf(ctx context.Context, expected string) (context.Context, error) {
 	comment, ok := getComment(ctx)
 	if !ok {
@@ -185,6 +224,8 @@ func theCommentShouldHaveABodyOf(ctx context.Context, expected string) (context.
 	return ctx, nil
 }
 
+// iDeleteACommentWithId sends DELETE /comments/{commentId} and returns an error
+// when the API does not respond with HTTP 200 OK.
 func iDeleteACommentWithId(ctx context.Context, commentId int) (context.Context, error) {
 	url := helpers.ResolveUrl(fmt.Sprintf("/comments/%d", commentId))
 
@@ -201,8 +242,12 @@ func iDeleteACommentWithId(ctx context.Context, commentId int) (context.Context,
 	return ctx, nil
 }
 
+// InitializeCommentTestSuite satisfies the godog.TestSuiteInitializer signature.
+// No suite-level setup is required for comment scenarios.
 func InitializeCommentTestSuite(_ *godog.TestSuiteContext) {}
 
+// InitializeCommentScenario wires all comment step definitions to their Gherkin
+// patterns.
 func InitializeCommentScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^a new comment$`, aNewComment)
 	ctx.Step(`^the new comment has a post id of (\d+)$`, theNewCommentHasAPostIdOf)
