@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
+
 	"github.com/cucumber/godog"
 	"github.com/ocrosby/godog-demo/pkg/helpers"
 	"github.com/ocrosby/godog-demo/pkg/models"
-	"io"
-	"net/http"
 )
 
 type albumFeature struct {
@@ -23,16 +24,7 @@ type albumFeature struct {
 }
 
 func newAlbumFeature() *albumFeature {
-	return &albumFeature{
-		response:  nil,
-		body:      nil,
-		url:       "",
-		resource:  "",
-		lastError: nil,
-		newAlbum:  nil,
-		album:     nil,
-		albums:    nil,
-	}
+	return &albumFeature{}
 }
 
 func (f *albumFeature) aNewAlbum() error {
@@ -58,23 +50,25 @@ func (f *albumFeature) theNewAlbumHasTitle(title string) error {
 func (f *albumFeature) sendRequest(method, resource string) error {
 	f.resource = resource
 	f.url = helpers.ResolveUrl(f.resource)
+
 	f.response, f.lastError = helpers.SendRequest(method, f.url, nil)
 	if f.lastError != nil {
 		return f.lastError
 	}
+	defer f.response.Body.Close()
 
 	f.body, f.lastError = io.ReadAll(f.response.Body)
 	if f.lastError != nil {
-		return fmt.Errorf("failed to read response body: %w", f.lastError)
+		return fmt.Errorf("reading response body: %w", f.lastError)
 	}
-	defer f.response.Body.Close()
 
 	return nil
 }
 
 func (f *albumFeature) unmarshalResponseBody(target interface{}) error {
-	if f.lastError = json.Unmarshal(f.body, target); f.lastError != nil {
-		return fmt.Errorf("failed to unmarshal response body: %w", f.lastError)
+	if err := json.Unmarshal(f.body, target); err != nil {
+		f.lastError = err
+		return fmt.Errorf("unmarshalling response body: %w", err)
 	}
 	return nil
 }
@@ -82,25 +76,20 @@ func (f *albumFeature) unmarshalResponseBody(target interface{}) error {
 func (f *albumFeature) iCreateANewAlbum() error {
 	body, err := json.Marshal(f.newAlbum)
 	if err != nil {
-		return fmt.Errorf("failed to marshal new album: %w", err)
+		return fmt.Errorf("marshalling new album: %w", err)
 	}
 
-	f.url = helpers.ResolveUrl("/albums")
-
-	f.response, f.lastError = helpers.SendRequest("POST", f.url, body)
+	f.response, f.lastError = helpers.SendRequest("POST", helpers.ResolveUrl("/albums"), body)
 	if f.lastError != nil {
 		return f.lastError
 	}
 
 	id, err := helpers.HandlePostResponse(f.response, &f.newAlbum)
 	if err != nil {
-		return fmt.Errorf("failed to handle post response: %w", err)
+		return fmt.Errorf("handling POST response: %w", err)
 	}
 
-	f.album = &models.Album{
-		ID: id,
-	}
-
+	f.album = &models.Album{ID: id}
 	return nil
 }
 
@@ -130,61 +119,54 @@ func (f *albumFeature) iDeleteAlbum(albumId int) error {
 
 func (f *albumFeature) thereShouldBeNoErrors() error {
 	if f.lastError != nil {
-		return fmt.Errorf("expected no errors, but got %v", f.lastError)
+		return fmt.Errorf("expected no errors, got %v", f.lastError)
 	}
 	return nil
 }
 
 func (f *albumFeature) theResponseShouldBeSuccessful() error {
-	if f.response.StatusCode < 200 || f.response.StatusCode >= 300 {
-		return fmt.Errorf("expected status code to be successful, but got %d", f.response.StatusCode)
+	if f.response.StatusCode < http.StatusOK || f.response.StatusCode >= http.StatusMultipleChoices {
+		return fmt.Errorf("expected successful status code, got %d", f.response.StatusCode)
 	}
 	return nil
 }
 
 func (f *albumFeature) theResponseShouldBeUnsuccessful() error {
-	if f.response.StatusCode < 200 || f.response.StatusCode >= 300 {
+	if f.response.StatusCode < http.StatusOK || f.response.StatusCode >= http.StatusMultipleChoices {
 		return nil
 	}
-
-	return fmt.Errorf("expected status code to be unsuccessful, but got %d", f.response.StatusCode)
+	return fmt.Errorf("expected unsuccessful status code, got %d", f.response.StatusCode)
 }
 
-func (f *albumFeature) theAlbumShouldHaveATitleOf(expectedTitle string) error {
-	if f.album.Title != expectedTitle {
-		return fmt.Errorf("expected album title %q, but got %q", expectedTitle, f.album.Title)
+func (f *albumFeature) theAlbumShouldHaveATitleOf(expected string) error {
+	if f.album.Title != expected {
+		return fmt.Errorf("expected album title %q, got %q", expected, f.album.Title)
 	}
 	return nil
 }
 
-func (f *albumFeature) theAlbumShouldHaveAUserIdOf(expectedUserId int) error {
-	if f.album.UserID != expectedUserId {
-		return fmt.Errorf("expected album userId %d, but got %d", expectedUserId, f.album.UserID)
+func (f *albumFeature) theAlbumShouldHaveAUserIdOf(expected int) error {
+	if f.album.UserID != expected {
+		return fmt.Errorf("expected album userId %d, got %d", expected, f.album.UserID)
 	}
 	return nil
 }
 
-func (f *albumFeature) theAlbumShouldHaveAnIdOf(expectedId int) error {
-	if f.album.ID != expectedId {
-		return fmt.Errorf("expected album ID %d, but got %d", expectedId, f.album.ID)
+func (f *albumFeature) theAlbumShouldHaveAnIdOf(expected int) error {
+	if f.album.ID != expected {
+		return fmt.Errorf("expected album ID %d, got %d", expected, f.album.ID)
 	}
 	return nil
 }
 
-func (f *albumFeature) thereShouldBeAlbumsInTheResponseBody(expectedAlbumCount int) error {
-	if len(f.albums) != expectedAlbumCount {
-		return fmt.Errorf("expected %d albums in the response body, but got %d", expectedAlbumCount, len(f.albums))
+func (f *albumFeature) thereShouldBeAlbumsInTheResponseBody(expected int) error {
+	if len(f.albums) != expected {
+		return fmt.Errorf("expected %d albums in response body, got %d", expected, len(f.albums))
 	}
 	return nil
 }
 
-func InitializeAlbumTestSuite(ctx *godog.TestSuiteContext) {
-	ctx.BeforeSuite(func() {
-	})
-
-	ctx.AfterSuite(func() {
-	})
-}
+func InitializeAlbumTestSuite(_ *godog.TestSuiteContext) {}
 
 func InitializeAlbumScenario(ctx *godog.ScenarioContext) {
 	feature := newAlbumFeature()
