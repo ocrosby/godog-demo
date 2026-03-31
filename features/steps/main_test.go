@@ -48,6 +48,3 @@ func TestFeatures(t *testing.T) {
 	}
 }
 
-func main() {
-	TestFeatures(&testing.T{})
-}

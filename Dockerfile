@@ -1,19 +1,16 @@
-FROM golang:1.23
+FROM golang:1.25
 
-# Set the working directory inside the container
 WORKDIR /app
 
-# Copy go.mod and go.sum files
+# Cache module downloads as a separate layer so they are not re-fetched on
+# every source change.
 COPY go.mod go.sum ./
+RUN go mod download
 
-# Download and cache dependencies
-RUN go mod download && go install github.com/cucumber/godog/cmd/godog@latest
-
-# Copy the rest of the application code
+# Copy source after dependencies so the module cache layer is reused when
+# only application code changes.
 COPY . .
 
-# Build the application
-RUN go build -o godog-demo ./cmd/godog-demo && chmod +x /app/godog-demo
-
-# Set the entry point to run the tests
-ENTRYPOINT ["/app/godog-demo"]
+# Run the full BDD test suite. -count=1 disables the test result cache so
+# the suite always executes fresh inside the container.
+CMD ["go", "test", "-v", "-count=1", "./features/steps/..."]

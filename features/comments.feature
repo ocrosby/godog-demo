@@ -29,10 +29,9 @@ Feature: Comments
         Then there should be no errors
         And the response should be successful
         And the comment should have an id of 13
-        And the comment should have a post id of 1
-        And the comment should have a name of "dolorum ut in voluptas"
-        And the comment should have an email of "something"
-        And the comment should have a body of "quidem molestiae enim"
+        And the comment should have a post id of 3
+        And the comment should have a name of "aut inventore non pariatur sit vitae voluptatem sapiente"
+        And the comment should have an email of "Kariane@jadyn.tv"
 
     @comments
     Scenario: Delete a comment

@@ -90,9 +90,9 @@ func theNewCommentHasABodyOf(ctx context.Context, value string) (context.Context
 	return withComment(ctx, comment), nil
 }
 
-// postComment marshals comment to JSON, POSTs it to POST /comments, checks that
-// the API returned HTTP 201 Created, and returns the server-assigned ID extracted
-// from the response body.
+// postComment marshals comment to JSON, POSTs it to POST /comments, stores the
+// response in lastResponse, checks that the API returned HTTP 201 Created, and
+// returns the server-assigned ID extracted from the response body.
 //
 // It is extracted from iCreateTheNewComment to keep that function within its
 // complexity budget. It returns (0, err) on any failure.
@@ -106,6 +106,7 @@ func postComment(comment *models.Comment) (int, error) {
 	if err != nil {
 		return 0, fmt.Errorf("sending POST /comments: %w", err)
 	}
+	lastResponse = resp
 
 	if resp.StatusCode != http.StatusCreated {
 		resp.Body.Close()
@@ -148,7 +149,8 @@ func theCommentShouldHaveAnIdOf(ctx context.Context, expected int) (context.Cont
 }
 
 // iRequestComment fetches the comment identified by commentId from
-// GET /comments/{id} and stores it in ctx for subsequent assertion steps.
+// GET /comments/{id}, stores the response in lastResponse for assertion steps,
+// and stores the unmarshalled comment in ctx.
 // It returns a wrapped error on any transport, read, or unmarshal failure.
 func iRequestComment(ctx context.Context, commentId int) (context.Context, error) {
 	url := helpers.ResolveUrl(fmt.Sprintf("/comments/%d", commentId))
@@ -157,9 +159,10 @@ func iRequestComment(ctx context.Context, commentId int) (context.Context, error
 	if err != nil {
 		return withError(ctx, err), fmt.Errorf("sending GET /comments/%d: %w", commentId, err)
 	}
-	defer resp.Body.Close()
+	lastResponse = resp
 
 	body, err := io.ReadAll(resp.Body)
+	resp.Body.Close()
 	if err != nil {
 		return withError(ctx, err), fmt.Errorf("reading response body: %w", err)
 	}
@@ -224,8 +227,8 @@ func theCommentShouldHaveABodyOf(ctx context.Context, expected string) (context.
 	return ctx, nil
 }
 
-// iDeleteACommentWithId sends DELETE /comments/{commentId} and returns an error
-// when the API does not respond with HTTP 200 OK.
+// iDeleteACommentWithId sends DELETE /comments/{commentId}, stores the response
+// in lastResponse, and returns an error when the API does not respond with HTTP 200 OK.
 func iDeleteACommentWithId(ctx context.Context, commentId int) (context.Context, error) {
 	url := helpers.ResolveUrl(fmt.Sprintf("/comments/%d", commentId))
 
@@ -233,6 +236,7 @@ func iDeleteACommentWithId(ctx context.Context, commentId int) (context.Context,
 	if err != nil {
 		return ctx, fmt.Errorf("sending DELETE /comments/%d: %w", commentId, err)
 	}
+	lastResponse = resp
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
@@ -242,6 +246,13 @@ func iDeleteACommentWithId(ctx context.Context, commentId int) (context.Context,
 	return ctx, nil
 }
 
+// thereShouldBeCommentsInTheResponseBody asserts that the most recent API
+// response body contains exactly expected Comment objects. It delegates to the
+// shared assertResponseBodyCount generic helper.
+func thereShouldBeCommentsInTheResponseBody(expected int) error {
+	return assertResponseBodyCount[models.Comment](expected)
+}
+
 // InitializeCommentTestSuite satisfies the godog.TestSuiteInitializer signature.
 // No suite-level setup is required for comment scenarios.
 func InitializeCommentTestSuite(_ *godog.TestSuiteContext) {}
@@ -249,6 +260,9 @@ func InitializeCommentTestSuite(_ *godog.TestSuiteContext) {}
 // InitializeCommentScenario wires all comment step definitions to their Gherkin
 // patterns.
 func InitializeCommentScenario(ctx *godog.ScenarioContext) {
+	InitializeCommonSteps(ctx)
+
+	ctx.Step(`^there should be (\d+) comments in the response body$`, thereShouldBeCommentsInTheResponseBody)
 	ctx.Step(`^a new comment$`, aNewComment)
 	ctx.Step(`^the new comment has a post id of (\d+)$`, theNewCommentHasAPostIdOf)
 	ctx.Step(`^the new comment has an id of (\d+)$`, theNewCommentHasAnIdOf)
