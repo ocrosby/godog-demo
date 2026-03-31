@@ -8,13 +8,18 @@ import (
 	"net/http"
 
 	"github.com/cucumber/godog"
+	"github.com/ocrosby/godog-demo/pkg/builders"
 	"github.com/ocrosby/godog-demo/pkg/helpers"
 	"github.com/ocrosby/godog-demo/pkg/models"
 )
 
-// commentKey is the context key used to store and retrieve the current Comment
-// being built or inspected within a scenario.
+// commentKey is the context key used to store and retrieve the Comment fetched
+// from the API or returned by a POST, for use in assertion steps.
 const commentKey contextKey = "comment"
+
+// commentBuilderKey is the context key used to store the CommentBuilder during
+// the construction phase (the "a new comment" / "the new comment has a …" steps).
+const commentBuilderKey contextKey = "commentBuilder"
 
 // withComment stores comment in ctx under commentKey and returns the updated context.
 func withComment(ctx context.Context, comment *models.Comment) context.Context {
@@ -29,65 +34,79 @@ func getComment(ctx context.Context) (*models.Comment, bool) {
 	return c, ok
 }
 
-// aNewComment initialises a blank Comment in the scenario context, ready for
-// subsequent "the new comment has a …" steps to populate.
+// withCommentBuilder stores b in ctx under commentBuilderKey and returns the
+// updated context.
+func withCommentBuilder(ctx context.Context, b *builders.CommentBuilder) context.Context {
+	return context.WithValue(ctx, commentBuilderKey, b)
+}
+
+// getCommentBuilder retrieves the CommentBuilder stored by withCommentBuilder
+// from ctx. It returns (nil, false) if no builder has been stored.
+func getCommentBuilder(ctx context.Context) (*builders.CommentBuilder, bool) {
+	b, ok := ctx.Value(commentBuilderKey).(*builders.CommentBuilder)
+	return b, ok
+}
+
+// aNewComment initialises a fresh CommentBuilder in the scenario context, ready
+// for subsequent "the new comment has a …" steps to populate via the builder's
+// With* methods.
 func aNewComment(ctx context.Context) (context.Context, error) {
-	return withComment(ctx, &models.Comment{}), nil
+	return withCommentBuilder(ctx, builders.NewCommentBuilder()), nil
 }
 
-// theNewCommentHasAPostIdOf sets the PostID on the comment being built in ctx.
-// It returns an error when no comment has been initialised in the context.
+// theNewCommentHasAPostIdOf sets the PostID on the CommentBuilder in ctx.
+// It returns an error when no builder has been initialised in the context.
 func theNewCommentHasAPostIdOf(ctx context.Context, postId int) (context.Context, error) {
-	comment, ok := getComment(ctx)
+	b, ok := getCommentBuilder(ctx)
 	if !ok {
-		return ctx, fmt.Errorf("comment not found in context")
+		return ctx, fmt.Errorf("comment builder not found in context")
 	}
-	comment.PostID = postId
-	return withComment(ctx, comment), nil
+	b.WithPostID(postId)
+	return ctx, nil
 }
 
-// theNewCommentHasAnIdOf sets the ID on the comment being built in ctx.
-// It returns an error when no comment has been initialised in the context.
+// theNewCommentHasAnIdOf sets the ID on the CommentBuilder in ctx.
+// It returns an error when no builder has been initialised in the context.
 func theNewCommentHasAnIdOf(ctx context.Context, id int) (context.Context, error) {
-	comment, ok := getComment(ctx)
+	b, ok := getCommentBuilder(ctx)
 	if !ok {
-		return ctx, fmt.Errorf("comment not found in context")
+		return ctx, fmt.Errorf("comment builder not found in context")
 	}
-	comment.ID = id
-	return withComment(ctx, comment), nil
+	b.WithID(id)
+	return ctx, nil
 }
 
-// theNewCommentHasANameOf sets the Name on the comment being built in ctx.
-// It returns an error when no comment has been initialised in the context.
+// theNewCommentHasANameOf sets the Name on the CommentBuilder in ctx.
+// It returns an error when no builder has been initialised in the context.
 func theNewCommentHasANameOf(ctx context.Context, value string) (context.Context, error) {
-	comment, ok := getComment(ctx)
+	b, ok := getCommentBuilder(ctx)
 	if !ok {
-		return ctx, fmt.Errorf("comment not found in context")
+		return ctx, fmt.Errorf("comment builder not found in context")
 	}
-	comment.Name = value
-	return withComment(ctx, comment), nil
+	b.WithName(value)
+	return ctx, nil
 }
 
-// theNewCommentHasAnEmailOf sets the Email on the comment being built in ctx.
-// It returns an error when no comment has been initialised in the context.
+// theNewCommentHasAnEmailOf sets the Email on the CommentBuilder in ctx.
+// It returns an error when no builder has been initialised in the context.
 func theNewCommentHasAnEmailOf(ctx context.Context, value string) (context.Context, error) {
-	comment, ok := getComment(ctx)
+	b, ok := getCommentBuilder(ctx)
 	if !ok {
-		return ctx, fmt.Errorf("comment not found in context")
+		return ctx, fmt.Errorf("comment builder not found in context")
 	}
-	comment.Email = value
-	return withComment(ctx, comment), nil
+	b.WithEmail(value)
+	return ctx, nil
 }
 
-// theNewCommentHasABodyOf sets the Body on the comment being built in ctx.
-// It returns an error when no comment has been initialised in the context.
+// theNewCommentHasABodyOf sets the Body on the CommentBuilder in ctx.
+// It returns an error when no builder has been initialised in the context.
 func theNewCommentHasABodyOf(ctx context.Context, value string) (context.Context, error) {
-	comment, ok := getComment(ctx)
+	b, ok := getCommentBuilder(ctx)
 	if !ok {
-		return ctx, fmt.Errorf("comment not found in context")
+		return ctx, fmt.Errorf("comment builder not found in context")
 	}
-	comment.Body = value
-	return withComment(ctx, comment), nil
+	b.WithBody(value)
+	return ctx, nil
 }
 
 // postComment marshals comment to JSON, POSTs it to POST /comments, stores the
@@ -116,14 +135,20 @@ func postComment(comment *models.Comment) (int, error) {
 	return helpers.HandlePostResponse(resp, comment)
 }
 
-// iCreateTheNewComment POSTs the comment built by prior steps, sets the
-// server-assigned ID on the comment, and stores the updated comment back in ctx.
-// Any error is both returned and stored in ctx so that assertion steps can
-// detect it with "the result should be an error".
+// iCreateTheNewComment builds the comment from the CommentBuilder in ctx,
+// validates required fields, POSTs it to the API, and stores the returned
+// comment (with its server-assigned ID) in ctx for subsequent assertion steps.
+// Any error is both returned and stored in ctx so that "there should be no
+// errors" steps can detect it.
 func iCreateTheNewComment(ctx context.Context) (context.Context, error) {
-	comment, ok := getComment(ctx)
+	b, ok := getCommentBuilder(ctx)
 	if !ok {
-		return ctx, fmt.Errorf("comment not found in context")
+		return ctx, fmt.Errorf("comment builder not found in context")
+	}
+
+	comment, err := b.Build()
+	if err != nil {
+		return withError(ctx, err), err
 	}
 
 	id, err := postComment(comment)

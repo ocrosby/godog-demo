@@ -60,27 +60,30 @@ func ReadResponseBody(resp *http.Response) (string, error) {
 // server-assigned ID (e.g. JSONPlaceholder's POST /albums).
 // It returns the extracted ID and a nil error on success, or (0, err) when:
 //   - the body cannot be read,
-//   - the JSON cannot be unmarshalled into target or into a generic map,
-//   - the response does not contain an "id" field.
+//   - the JSON cannot be unmarshalled into target,
+//   - the response does not contain a non-zero "id" field.
 func HandlePostResponse(response *http.Response, target interface{}) (int, error) {
 	body, err := io.ReadAll(response.Body)
+	defer response.Body.Close()
 	if err != nil {
 		return 0, fmt.Errorf("failed to read response body: %w", err)
 	}
-	defer response.Body.Close()
 
 	if err := json.Unmarshal(body, target); err != nil {
 		return 0, fmt.Errorf("failed to unmarshal response body: %w", err)
 	}
 
-	var responseBody map[string]interface{}
-	if err := json.Unmarshal(body, &responseBody); err != nil {
-		return 0, fmt.Errorf("failed to unmarshal response body to map: %w", err)
+	// Extract the server-assigned id using a typed struct to avoid the
+	// map[string]interface{} + float64 assertion that the previous implementation used.
+	var idHolder struct {
+		ID int `json:"id"`
+	}
+	if err := json.Unmarshal(body, &idHolder); err != nil {
+		return 0, fmt.Errorf("extracting id from response: %w", err)
+	}
+	if idHolder.ID == 0 {
+		return 0, fmt.Errorf("response does not contain an id property")
 	}
 
-	if id, ok := responseBody["id"].(float64); ok {
-		return int(id), nil
-	}
-
-	return 0, fmt.Errorf("response does not contain an id property")
+	return idHolder.ID, nil
 }

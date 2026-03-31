@@ -13,6 +13,7 @@ import (
 
 	"github.com/cucumber/godog"
 	"github.com/ocrosby/godog-demo/pkg/helpers"
+	"github.com/ocrosby/godog-demo/pkg/validation"
 )
 
 // contextKey is an unexported string type used as the key type for values stored
@@ -84,21 +85,17 @@ func iSendRequestTo(method, resource string) error {
 }
 
 // responseShouldBeSuccessful returns an error when lastResponse carries a
-// non-2xx status code, indicating an unexpected failure from the API.
+// non-2xx status code. It delegates to validation.SuccessValidator, the single
+// canonical implementation of this check shared across all scenario contexts.
 func responseShouldBeSuccessful() error {
-	if lastResponse.StatusCode < http.StatusOK || lastResponse.StatusCode >= http.StatusMultipleChoices {
-		return fmt.Errorf("expected successful status code, got %d", lastResponse.StatusCode)
-	}
-	return nil
+	return validation.SuccessValidator{}.Validate(lastResponse)
 }
 
 // responseStatusCodeShouldBe returns an error when lastResponse does not carry
-// exactly the expected HTTP status code.
+// exactly the expected HTTP status code. It delegates to
+// validation.ExactStatusValidator.
 func responseStatusCodeShouldBe(expected int) error {
-	if lastResponse.StatusCode != expected {
-		return fmt.Errorf("expected status code %d, got %d", expected, lastResponse.StatusCode)
-	}
-	return nil
+	return validation.ExactStatusValidator{Expected: expected}.Validate(lastResponse)
 }
 
 // thereShouldBeNoErrors returns an error if a step error has been stored in ctx

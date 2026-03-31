@@ -8,22 +8,24 @@ import (
 	"net/http"
 
 	"github.com/cucumber/godog"
+	"github.com/ocrosby/godog-demo/pkg/builders"
 	"github.com/ocrosby/godog-demo/pkg/helpers"
 	"github.com/ocrosby/godog-demo/pkg/models"
+	"github.com/ocrosby/godog-demo/pkg/validation"
 )
 
 // albumFeature holds the per-scenario state for the album BDD steps.
 // A fresh instance is created by newAlbumFeature and bound to every scenario
 // via InitializeAlbumScenario, so no state leaks between scenarios.
 type albumFeature struct {
-	response  *http.Response
-	body      []byte
-	url       string
-	resource  string
-	lastError error
-	newAlbum  *models.Album
-	album     *models.Album
-	albums    []*models.Album
+	response     *http.Response
+	body         []byte
+	url          string
+	resource     string
+	lastError    error
+	albumBuilder *builders.AlbumBuilder
+	album        *models.Album
+	albums       []*models.Album
 }
 
 // newAlbumFeature returns an albumFeature with all fields at their zero values.
@@ -31,27 +33,28 @@ func newAlbumFeature() *albumFeature {
 	return &albumFeature{}
 }
 
-// aNewAlbum initialises a blank Album ready for the scenario to populate.
+// aNewAlbum initialises a fresh AlbumBuilder ready for the scenario to populate
+// via the theNewAlbumHas* steps.
 func (f *albumFeature) aNewAlbum() error {
-	f.newAlbum = &models.Album{}
+	f.albumBuilder = builders.NewAlbumBuilder()
 	return nil
 }
 
 // theNewAlbumHasId sets the ID on the album being built by the current scenario.
 func (f *albumFeature) theNewAlbumHasId(id int) error {
-	f.newAlbum.ID = id
+	f.albumBuilder.WithID(id)
 	return nil
 }
 
 // theNewAlbumHasUserId sets the UserID on the album being built by the current scenario.
 func (f *albumFeature) theNewAlbumHasUserId(userId int) error {
-	f.newAlbum.UserID = userId
+	f.albumBuilder.WithUserID(userId)
 	return nil
 }
 
 // theNewAlbumHasTitle sets the Title on the album being built by the current scenario.
 func (f *albumFeature) theNewAlbumHasTitle(title string) error {
-	f.newAlbum.Title = title
+	f.albumBuilder.WithTitle(title)
 	return nil
 }
 
@@ -86,11 +89,17 @@ func (f *albumFeature) unmarshalResponseBody(target interface{}) error {
 	return nil
 }
 
-// iCreateANewAlbum POSTs the album built by prior steps to /albums and stores
-// the server-assigned ID on f.album. It returns an error if marshalling,
-// the HTTP request, or the response parsing fails.
+// iCreateANewAlbum builds the album from f.albumBuilder, POSTs it to /albums,
+// and stores the server-assigned ID on f.album. It returns an error if the
+// builder validation, marshalling, the HTTP request, or the response parsing
+// fails.
 func (f *albumFeature) iCreateANewAlbum() error {
-	body, err := json.Marshal(f.newAlbum)
+	album, err := f.albumBuilder.Build()
+	if err != nil {
+		return fmt.Errorf("building album: %w", err)
+	}
+
+	body, err := json.Marshal(album)
 	if err != nil {
 		return fmt.Errorf("marshalling new album: %w", err)
 	}
@@ -100,7 +109,7 @@ func (f *albumFeature) iCreateANewAlbum() error {
 		return f.lastError
 	}
 
-	id, err := helpers.HandlePostResponse(f.response, &f.newAlbum)
+	id, err := helpers.HandlePostResponse(f.response, album)
 	if err != nil {
 		return fmt.Errorf("handling POST response: %w", err)
 	}
@@ -148,21 +157,16 @@ func (f *albumFeature) thereShouldBeNoErrors() error {
 }
 
 // theResponseShouldBeSuccessful returns an error when f.response carries a
-// non-2xx HTTP status code.
+// non-2xx HTTP status code. It delegates to validation.SuccessValidator.
 func (f *albumFeature) theResponseShouldBeSuccessful() error {
-	if f.response.StatusCode < http.StatusOK || f.response.StatusCode >= http.StatusMultipleChoices {
-		return fmt.Errorf("expected successful status code, got %d", f.response.StatusCode)
-	}
-	return nil
+	return validation.SuccessValidator{}.Validate(f.response)
 }
 
 // theResponseShouldBeUnsuccessful returns an error when f.response carries a
 // 2xx HTTP status code, i.e. when the response was unexpectedly successful.
+// It delegates to validation.FailureValidator.
 func (f *albumFeature) theResponseShouldBeUnsuccessful() error {
-	if f.response.StatusCode < http.StatusOK || f.response.StatusCode >= http.StatusMultipleChoices {
-		return nil
-	}
-	return fmt.Errorf("expected unsuccessful status code, got %d", f.response.StatusCode)
+	return validation.FailureValidator{}.Validate(f.response)
 }
 
 // theAlbumShouldHaveATitleOf returns an error when f.album.Title does not equal expected.
